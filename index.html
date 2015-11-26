@@ -6,15 +6,17 @@
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <title>app</title>
-    <script defer src='js/app.js'></script>
-    <style>
-      canvas {
-        image-rendering: pixelated;
-      }
-    </style>
+    <script defer src='js/boat.js'></script>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
   </head>
   <body>
-    <canvas id='gameCanvas' width='800' height='600'></canvas>
+    <!-- <canvas id='gameCanvas' width='800' height='600'></canvas> -->
+    <div class="canvas-container">
+      <canvas id="canvas" width="1000" height="600"></canvas>
+    </div>
+        <!--<canvas id="game" width="500" height="300"></canvas>-->
+        <!--<canvas id="player" width="500" height="300"></canvas>-->
+        <!--<canvas id="canvas" width="1000" height="600" style="visibility :hidden"></canvas>-->
 
   </body>
 </html>
