@@ -2,9 +2,11 @@
 
 var Game = function () {
 
-    var self = this;
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
+    var self = this,
+        canvas = document.getElementById("canvas"),
+        context = canvas.getContext("2d"),
+        canvasWidth = canvas.width,
+        canvasHeight = canvas.height;
 
     this.player = {
         x : 50,
@@ -20,7 +22,6 @@ var Game = function () {
             if (Math.abs(this.rotationMultiplier + value) < rotationLimit) {
                 this.rotationMultiplier = Math.round((this.rotationMultiplier += value) * 1000) / 1000;
             }
-
         },
         calculateNextMove: function() {
             this.x += this.speed * Math.cos(Math.PI/180 * (this.angle));
@@ -31,17 +32,17 @@ var Game = function () {
             if (!self.bullet.alive) {
                 self.bullet.x = this.x;
                 self.bullet.y = this.y;
-                self.bullet.angle = this.angle;
+                self.bullet.playerAngle = this.angle;
             }
-
         },
         render: function(){
+            this.calculateNextMove();
             // save current context state
             context.save();
             //move context to players coordinates
-            context.translate(self.player.x, self.player.y);
+            context.translate(this.x, this.y);
             //rotate context to a new angle
-            context.rotate(Math.PI/180 * self.player.angle);
+            context.rotate(Math.PI/180 * this.angle);
             //draw player's boat
             context.drawImage(self.boat, -(self.boat.width/2), -(self.boat.height/2));
             //restore context
@@ -52,35 +53,40 @@ var Game = function () {
 
     this.bullet = {
         alive : false,
+        reloaded : true,
         x : 0,
         y : 0,
         speed : 10,
-        angle : 0,
-        side: 1, //1 - left, 2 - right
-        calculateNextMove: function() {
-            if (this.alive) {
-                if (this.side == 1) {
-                    this.x += this.speed * Math.cos(Math.PI/180 * (this.angle - 90));
-                    this.y += this.speed * Math.sin(Math.PI/180 * (this.angle - 90));
-                }
-                else if (this.side == 2) {
-                    this.x += this.speed * Math.cos(Math.PI/180 * (this.angle + 90));
-                    this.y += this.speed * Math.sin(Math.PI/180 * (this.angle + 90));
-                }
-
+        playerAngle : 0,
+        bulletAngle: -90, //-90 : left, 90 : right,
+        bulletColor: "#000",
+        setBulletAngle : function(value) {
+            if (!this.alive) {
+                this.bulletAngle = value;
             }
         },
+        calculateNextMove: function() {
+            //check if bullet is inside visible part of the canvas
+            if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                this.alive = false;
+            }
+
+            this.x += this.speed * Math.cos(Math.PI/180 * (this.playerAngle + this.bulletAngle));
+            this.y += this.speed * Math.sin(Math.PI/180 * (this.playerAngle + this.bulletAngle));
+
+        },
         render: function() {
+            if (!this.alive) return;
+            this.calculateNextMove();
             context.save();
-            //move context to players coordinates
+            //move context to bullet coordinates
             context.translate(this.x, this.y);
-            //rotate context to a new angle
-            context.rotate(Math.PI/180 * this.angle);
-            //draw player's boat
+            //rotate context to a bullet trajectory angle
+            //context.rotate(Math.PI/180 * this.shootAngle);
+            //draw bullet
             context.beginPath();
             context.arc(0, 0, 2, 0, Math.PI*2);
-
-            context.fillStyle = "#000";
+            context.fillStyle = this.bulletColor;
             context.fill();
             context.closePath();
             //restore context
@@ -90,13 +96,10 @@ var Game = function () {
 
     this.draw = function() {
         //context = canvas.getContext("2d");
-        context.clearRect(0, 0, 1000, 600);
-
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
         //context.fillStyle = "rgb(100, 200, 120)";
         //context.fillRect(10, 10, 50, 50);
-        self.player.calculateNextMove();
         self.player.render();
-        self.bullet.calculateNextMove();
         self.bullet.render();
 
         window.requestAnimationFrame(self.draw);
@@ -118,7 +121,6 @@ var Game = function () {
             //increase speed
             self.player.speed += 0.05;
         }
-
         if (event.keyCode == 83) {
             //decrease speed
             self.player.speed -= 0.05;
@@ -132,17 +134,18 @@ var Game = function () {
             self.player.rotationIndex(+0.025);
         }
         if (event.keyCode == 32) {
+            //prevent space button default browser behaviour
             event.preventDefault();
             //fire
             self.bullet.alive = true;
         }
         if (event.keyCode == 49) {
             //left side ready to shoot
-            self.bullet.side = 1;
+            self.bullet.setBulletAngle(-90);
         }
         if (event.keyCode == 50) {
             //right side ready to shoot
-            self.bullet.side = 2;
+            self.bullet.setBulletAngle(90);
         }
 
     };
