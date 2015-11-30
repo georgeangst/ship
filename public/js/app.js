@@ -15,7 +15,7 @@ var Game = function () {
         angle : 45,
         rotationMultiplier: 0,
         rotationIndex : function(value) {
-            var rotationLimit = 1;
+            var rotationLimit = 0.5;
 
             if (!arguments.length) return this.rotationMultiplier;
 
@@ -23,20 +23,20 @@ var Game = function () {
                 this.rotationMultiplier = Math.round((this.rotationMultiplier += value) * 1000) / 1000;
             }
         },
-        calculateNextMove: function() {
+        fire : function() {
+            if(self.bullet.alive) return;
+            self.bullet.x = this.x;
+            self.bullet.y = this.y;
+            self.bullet.playerAngle = this.angle;
+            self.bullet.alive = true;
+        },
+        calculatePosition: function() {
             this.x += this.speed * Math.cos(Math.PI/180 * (this.angle));
             this.y += this.speed * Math.sin(Math.PI/180 * (this.angle));
             this.angle += this.rotationIndex();
-
-            //save bullet state
-            if (!self.bullet.alive) {
-                self.bullet.x = this.x;
-                self.bullet.y = this.y;
-                self.bullet.playerAngle = this.angle;
-            }
         },
         render: function(){
-            this.calculateNextMove();
+            this.calculatePosition();
             // save current context state
             context.save();
             //move context to players coordinates
@@ -47,13 +47,23 @@ var Game = function () {
             context.drawImage(self.boat, -(self.boat.width/2), -(self.boat.height/2));
             //restore context
             context.restore();
+        },
+        sail : {
+            x : 0,
+            y : 0,
+            angle : 0,
+            calculatePosition : function() {
+
+            },
+            render : function() {
+
+            }
         }
 
     };
 
     this.bullet = {
         alive : false,
-        reloaded : true,
         x : 0,
         y : 0,
         speed : 10,
@@ -65,7 +75,7 @@ var Game = function () {
                 this.bulletAngle = value;
             }
         },
-        calculateNextMove: function() {
+        calculatePosition: function() {
             //check if bullet is inside visible part of the canvas
             if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
                 this.alive = false;
@@ -77,7 +87,7 @@ var Game = function () {
         },
         render: function() {
             if (!this.alive) return;
-            this.calculateNextMove();
+            this.calculatePosition();
             context.save();
             //move context to bullet coordinates
             context.translate(this.x, this.y);
@@ -137,7 +147,7 @@ var Game = function () {
             //prevent space button default browser behaviour
             event.preventDefault();
             //fire
-            self.bullet.alive = true;
+            self.player.fire();
         }
         if (event.keyCode == 49) {
             //left side ready to shoot
