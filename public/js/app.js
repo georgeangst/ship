@@ -2,7 +2,7 @@
 
 var Game = function () {
 
-    var self = this,
+    var app = this,
         canvas = document.getElementById("canvas"),
         context = canvas.getContext("2d"),
         canvasWidth = canvas.width,
@@ -12,30 +12,36 @@ var Game = function () {
         x : 50,
         y : 50,
         speed : 0,
+        maxSpeed : 0.1,
+        changeSpeed : function(value) {
+            console.log(value);
+            if (Math.abs(this.speed + value) <= this.maxSpeed) {
+              this.speed += value;
+            }
+        },
         angle : 45,
         rotationMultiplier: 0,
-        rotationIndex : function(value) {
-            var rotationLimit = 0.5;
+        turn : function(value) {
+            var rotationLimit = 0.1;
 
-            if (!arguments.length) return this.rotationMultiplier;
-
-            if (Math.abs(this.rotationMultiplier + value) < rotationLimit) {
+            if (Math.abs(this.rotationMultiplier + value) <= rotationLimit) {
+                console.log(this.rotationMultiplier)
                 this.rotationMultiplier = Math.round((this.rotationMultiplier += value) * 1000) / 1000;
             }
         },
         fire : function() {
-            if(self.bullet.alive) return;
-            self.bullet.x = this.x;
-            self.bullet.y = this.y;
-            self.bullet.playerAngle = this.angle;
-            self.bullet.alive = true;
+            if(app.bullet.alive) return;
+            app.bullet.x = this.x;
+            app.bullet.y = this.y;
+            app.bullet.playerAngle = this.angle;
+            app.bullet.alive = true;
         },
         calculatePosition: function() {
             this.x += this.speed * Math.cos(Math.PI/180 * (this.angle));
             this.y += this.speed * Math.sin(Math.PI/180 * (this.angle));
-            this.angle += this.rotationIndex();
+            this.angle += this.rotationMultiplier;
         },
-        render: function(){
+        render: function() {
             this.calculatePosition();
             // save current context state
             context.save();
@@ -44,21 +50,31 @@ var Game = function () {
             //rotate context to a new angle
             context.rotate(Math.PI/180 * this.angle);
             //draw player's boat
-            context.drawImage(self.boat, -(self.boat.width/2), -(self.boat.height/2));
+            context.drawImage(app.boat, -(app.boat.width/2), -(app.boat.height/2));
             //restore context
             context.restore();
         },
-        sail : {
-            x : 0,
-            y : 0,
-            angle : 0,
-            calculatePosition : function() {
-
-            },
-            render : function() {
-
+        sailAngle : 0,
+        sailMaxAngle : 40,
+        sailRotate : function(value) {
+            if (Math.abs(this.sailAngle + value) <= this.sailMaxAngle) {
+                this.sailAngle += value;
             }
+        },
+        sailRender : function() {
+            //context.fillStyle = "black";
+            context.save();
+            context.translate(this.x, this.y);
+            context.lineCap = "round";
+            context.rotate(Math.PI/180 * (this.angle + this.sailAngle));
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(0, 0);
+            context.lineTo(-40, 0);
+            context.stroke();
+            context.restore();
         }
+
 
     };
 
@@ -87,7 +103,6 @@ var Game = function () {
         },
         render: function() {
             if (!this.alive) return;
-            this.calculatePosition();
             context.save();
             //move context to bullet coordinates
             context.translate(this.x, this.y);
@@ -109,19 +124,24 @@ var Game = function () {
         context.clearRect(0, 0, canvasWidth, canvasHeight);
         //context.fillStyle = "rgb(100, 200, 120)";
         //context.fillRect(10, 10, 50, 50);
-        self.player.render();
-        self.bullet.render();
+        app.player.calculatePosition();
+        app.player.render();
 
-        window.requestAnimationFrame(self.draw);
+        app.bullet.calculatePosition();
+        app.bullet.render();
+
+        app.player.sailRender();
+
+        window.requestAnimationFrame(app.draw);
     };
 
     this.init = function() {
-        self.boat = new Image();
-        self.boat.src = "boat.svg";
+        app.boat = new Image();
+        app.boat.src = "boat.svg";
 
-        window.addEventListener("keydown", self.keypressHandler, false);
+        window.addEventListener("keydown", app.keypressHandler, false);
         //window.addEventListener("keyup", keyupHandler, false);
-        window.requestAnimationFrame(self.draw);
+        window.requestAnimationFrame(app.draw);
     };
 
     this.keypressHandler = function(event) {
@@ -129,33 +149,41 @@ var Game = function () {
         console.log(event.keyCode);
         if (event.keyCode == 87) {
             //increase speed
-            self.player.speed += 0.05;
+            app.player.changeSpeed(0.01);
         }
         if (event.keyCode == 83) {
             //decrease speed
-            self.player.speed -= 0.05;
+            app.player.changeSpeed(-0.01);
         }
         if (event.keyCode == 65) {
             //rotation to the left
-            self.player.rotationIndex(-0.025);
+            app.player.turn(-0.01);
         }
         if (event.keyCode == 68) {
             //rotation to the right
-            self.player.rotationIndex(+0.025);
+            app.player.turn(+0.01);
         }
         if (event.keyCode == 32) {
             //prevent space button default browser behaviour
             event.preventDefault();
             //fire
-            self.player.fire();
+            app.player.fire();
         }
         if (event.keyCode == 49) {
             //left side ready to shoot
-            self.bullet.setBulletAngle(-90);
+            app.bullet.setBulletAngle(-90);
         }
         if (event.keyCode == 50) {
             //right side ready to shoot
-            self.bullet.setBulletAngle(90);
+            app.bullet.setBulletAngle(90);
+        }
+        if (event.keyCode == 37) {
+            //sail rotate to the left
+            app.player.sailRotate(-1);
+        }
+        if (event.keyCode == 39) {
+            //sail rotate to the left
+            app.player.sailRotate(1);
         }
 
     };
