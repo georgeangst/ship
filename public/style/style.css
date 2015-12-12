@@ -1,0 +1,24 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: #fff;
+  font-family: arial, sans-serif;
+}
+.canvas-container {
+  padding-top: 100px;
+  margin: 0 auto;
+  width: 1000px;
+  position: relative;
+}
+canvas {
+  background: #fff;
+  image-rendering: pixelated;
+}
+.fps-panel {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
