@@ -1,12 +1,25 @@
 doctype html
 html(lang='en')
-  head
-    meta(charset='utf-8')
-    meta(name='viewport', content='width=device-width, initial-scale=1')
-    title formidable islands
-    //link(rel='stylesheet', href='style/reset.css')
-    link(rel='stylesheet' href='style/style.css')
-    script(defer, src='js/app.js')
-  body
-    .canvas-container
-      canvas#canvas(width='1000', height='600')
+    head
+        meta(charset='utf-8')
+        meta(name='viewport', content='width=device-width, initial-scale=1')
+        title formidable islands
+        //link(rel='stylesheet', href='style/reset.css')
+        link(rel='stylesheet' href='style/style.css')
+        script(defer, src='js/mainLoop.js')
+        script(defer, src='js/bullet.js')
+        script(defer, src='js/ship.js')
+        script(defer, src='js/game.js')
+        script(defer, src='js/canvas.js')
+
+
+    body
+        .canvas-container
+            canvas#canvas(width='1000', height='600')
+
+        .fps-panel
+            label(for='fps') Maximum FPS:
+            input#fps(type='range', min=1, max=60, step=1, value=60)
+            span#fpsValue 60
+            #fpsCounter 0 FPS
+

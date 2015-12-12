@@ -1,4 +1,4 @@
-var express = require('express')
+var express = require('express'),
 stylus = require('stylus');
 
 var app = express();

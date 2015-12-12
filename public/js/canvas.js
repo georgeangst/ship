@@ -1,208 +1,154 @@
 'use strict';
 
-(function(){
+(function() {
+	var app = this;
 
+	var Canvas = function() {
 
+		this.canvas = document.getElementById('canvas');
+		this.context = this.canvas.getContext('2d');
+		this.canvasWidth = this.canvas.width;
+		this.canvasHeight = this.canvas.height;
 
-    var app = this;
+		this.update = function(delta) {
 
-    var Canvas = function() {
+			for (var i = 0; i < app.game.players.length; i++) {
+				app.game.players[i].update(delta);
+			}
 
-        this.canvas = document.getElementById('canvas');
-        this.context = this.canvas.getContext('2d');
-        this.canvasWidth = this.canvas.width;
-        this.canvasHeight = this.canvas.height;
+			if (app.game.bullets.length > 0) {
+				for (var z = 0; z < app.game.bullets.length; z++) {
+					app.game.bullets[z].update(delta);
+				}
+			}
 
-        this.update = function(delta) {
+		};
 
-            app.player.update(delta);
+		this.calcInterpolation = function(last, current, interpolationPercent) {
+			return last + (current - last) * interpolationPercent;
+		};
 
-            //app.bullet.update();
-        };
+		this.drawShip = function(interpolationPercent) {
 
-        this.drawShip = function(interpolationPercentage) {
-            var x = app.player.lastX + (app.player.x - app.player.lastX) * interpolationPercentage,
-                y = app.player.lastY + (app.player.y - app.player.lastY) * interpolationPercentage,
-                angle = app.player.lastAngle + (app.player.angle - app.player.lastAngle) * interpolationPercentage;
-            this.context.save();
-            //move context to players coordinates
-            this.context.translate(x, y);
-            //rotate context to a new angle
-            this.context.rotate(Math.PI / 180 * angle);
-            //draw player's boat
-            this.context.drawImage(app.boat, -(app.boat.width / 2), -(app.boat.height / 2));
-            //restore context
-            this.context.restore();
-        };
+			for (var i = 0; i < app.game.players.length; i++) {
 
-        this.draw = function(interpolationPercentage) {
+				//var x = this.calcInterpolation(app.game.players[i].lastX, app.game.players[i].x, interpolationPercent),
+				//		y = this.calcInterpolation(app.game.players[i].lastY, app.game.players[i].y, interpolationPercent),
+				//		angle = this.calcInterpolation(app.game.players[i].lastAngle, app.game.players[i].angle, interpolationPercent);
 
-            //context = canvas.getContext("2d");
+				//console.log(x, app.game.players[i].x)
 
-            this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-            this.drawShip(interpolationPercentage);
+				this.context.save();
+				//move context to players coordinates
+				this.context.translate(app.game.players[i].x, app.game.players[i].y);
+				//rotate context to a new angle
+				this.context.rotate(Math.PI / 180 * app.game.players[i].angle);
+				//draw player's boat
+				this.context.drawImage(app.boat, -(app.boat.width / 2), -(app.boat.height / 2));
+				//restore context
+				this.context.restore();
+			};
 
-            //context.fillStyle = "rgb(100, 200, 120)";
-            //context.fillRect(10, 10, 50, 50);
+		};
 
-            //app.bullet.render();
+		this.drawBullet = function(interpolationPercent) {
 
-            //app.player.sailRender();
+			for (var i = 0; i < app.game.bullets.length; i++) {
+				//var x = this.calcInterpolation(app.game.bullets[i].lastX, app.game.bullets[i].x, interpolationPercent),
+				//		y = this.calcInterpolation(app.game.bullets[i].lastY, app.game.bullets[i].y, interpolationPercent);
+				//
+				//console.log(x, app.game.bullets[i].x)
+				this.context.save();
+				this.context.translate(app.game.bullets[i].x, app.game.bullets[i].y);
+				//rotate context to a bullet trajectory angle
+				//context.rotate(Math.PI/180 * this.shootAngle);
+				this.context.beginPath();
+				this.context.arc(0, 0, 2, 0, Math.PI*2);
+				this.context.fillStyle = app.game.bullets[i].bulletColor;
+				this.context.fill();
+				this.context.closePath();
+				this.context.restore();
+			}
 
-            //window.requestAnimationFrame(app.draw);
-        };
+		};
 
-        this.init();
+		this.draw = function(interpolationPercent) {
 
-    };
+			//context = canvas.getContext("2d");
 
-        //sailAngle : 0,
-        //sailMaxAngle : 40,
-        //sailRotate : function(value) {
-        //    if (Math.abs(this.sailAngle + value) <= this.sailMaxAngle) {
-        //        this.sailAngle += value;
-        //    }
-        //},
-        //sailRender : function() {
-        //    //context.fillStyle = "black";
-        //    context.save();
-        //    context.translate(this.x, this.y);
-        //    context.lineCap = "round";
-        //    context.rotate(Math.PI/180 * (this.angle + this.sailAngle));
-        //    context.lineWidth = 2;
-        //    context.beginPath();
-        //    context.moveTo(0, 0);
-        //    context.lineTo(-40, 0);
-        //    context.stroke();
-        //    context.restore();
-        //}
+			this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+			this.drawShip(interpolationPercent);
+			this.drawBullet(interpolationPercent);
 
-    //this.bullet = {
-    //    alive : false,
-    //    x : 0,
-    //    y : 0,
-    //    speed : 10,
-    //    theta : 0,
-    //    playerAngle : 0,
-    //    bulletAngle: -90, //-90 : left, 90 : right,
-    //    bulletColor: "#000",
-    //    setBulletAngle : function(value) {
-    //        if (!this.alive) {
-    //            this.bulletAngle = value;
-    //        }
-    //    },
-    //    update: function(delta) {
-    //
-    //        this.theta += this.velocity * delta;
-    //        //check if bullet is inside visible part of the canvas
-    //        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-    //            this.alive = false;
-    //        }
-    //
-    //        this.x += this.theta * Math.cos(Math.PI/180 * (this.playerAngle + this.bulletAngle));
-    //        this.y += this.theta * Math.sin(Math.PI/180 * (this.playerAngle + this.bulletAngle));
-    //
-    //    },
-    //    render: function() {
-    //        if (!this.alive) return;
-    //        context.save();
-    //        //move context to bullet coordinates
-    //        context.translate(this.x, this.y);
-    //        //rotate context to a bullet trajectory angle
-    //        //context.rotate(Math.PI/180 * this.shootAngle);
-    //        //draw bullet
-    //        context.beginPath();
-    //        context.arc(0, 0, 2, 0, Math.PI*2);
-    //        context.fillStyle = this.bulletColor;
-    //        context.fill();
-    //        context.closePath();
-    //        //restore context
-    //        context.restore();
-    //    }
-    //};
+			//context.fillStyle = "rgb(100, 200, 120)";
+			//context.fillRect(10, 10, 50, 50);
 
+			//app.bullet.render();
 
+			//app.player.sailRender();
 
-    Canvas.prototype.init = function() {
-        this.game = new app.Game();
-        //app.mainLoop.start();
-    };
+			//window.requestAnimationFrame(app.draw);
+		};
 
-    this.keypressHandler = function(event) {
+		this.init();
 
-        console.log(event.keyCode);
-        if (event.keyCode == 87) {
-            //increase speed
-            app.player.changeSpeed(0.001);
-        }
-        if (event.keyCode == 83) {
-            //decrease speed
-            app.player.changeSpeed(-0.001);
-        }
-        if (event.keyCode == 65) {
-            //rotation to the left
-            app.player.turn(-0.01);
-        }
-        if (event.keyCode == 68) {
-            //rotation to the right
-            app.player.turn(+0.01);
-        }
-        if (event.keyCode == 32) {
-            //prevent space button default browser behaviour
-            event.preventDefault();
-            //fire
-            app.player.fire();
-        }
-        if (event.keyCode == 49) {
-            //left side ready to shoot
-            app.bullet.setBulletAngle(-90);
-        }
-        if (event.keyCode == 50) {
-            //right side ready to shoot
-            app.bullet.setBulletAngle(90);
-        }
-        if (event.keyCode == 37) {
-            //sail rotate to the left
-            app.player.sailRotate(-1);
-        }
-        if (event.keyCode == 39) {
-            //sail rotate to the left
-            app.player.sailRotate(1);
-        }
+	};
 
-    };
+			//sailAngle : 0,
+			//sailMaxAngle : 40,
+			//sailRotate : function(value) {
+			//    if (Math.abs(this.sailAngle + value) <= this.sailMaxAngle) {
+			//        this.sailAngle += value;
+			//    }
+			//},
+			//sailRender : function() {
+			//    //context.fillStyle = "black";
+			//    context.save();
+			//    context.translate(this.x, this.y);
+			//    context.lineCap = "round";
+			//    context.rotate(Math.PI/180 * (this.angle + this.sailAngle));
+			//    context.lineWidth = 2;
+			//    context.beginPath();
+			//    context.moveTo(0, 0);
+			//    context.lineTo(-40, 0);
+			//    context.stroke();
+			//    context.restore();
+			//}
 
+	Canvas.prototype.init = function() {
+		app.game = new app.Game();
+		//app.mainLoop.start();
+	};
 
+	app.Canvas = Canvas;
 
-    app.Canvas = Canvas;
-
-    return Canvas.Canvas;
+	return Canvas.Canvas;
 
 }).call(window.is7 = window.is7 || {});
 
 var fpsCounter = document.getElementById('fpsCounter'),
-    fpsValue = document.getElementById('fpsValue');
+	fpsValue = document.getElementById('fpsValue');
 
 function end(fps, panic) {
-    fpsCounter.textContent = parseInt(fps, 10) + ' FPS';
-    if (panic) {
-        // This pattern introduces non-deterministic behavior, but in this case
-        // it's better than the alternative (the application would look like it
-        // was running very quickly until the simulation caught up to real
-        // time). See the documentation for `MainLoop.setEnd()` for additional
-        // explanation.
-        var discardedTime = Math.round(MainLoop.resetFrameDelta());
-        console.warn('Main loop panicked, probably because the browser tab was put in the background. Discarding ' + discardedTime + 'ms');
-    }
+	fpsCounter.textContent = parseInt(fps, 10) + ' FPS';
+	if (panic) {
+		// This pattern introduces non-deterministic behavior, but in this case
+		// it's better than the alternative (the application would look like it
+		// was running very quickly until the simulation caught up to real
+		// time). See the documentation for `MainLoop.setEnd()` for additional
+		// explanation.
+		var discardedTime = Math.round(MainLoop.resetFrameDelta());
+		console.warn('Main loop panicked, probably because the browser tab was put in the background. Discarding ' + discardedTime + 'ms');
+	}
 
 }
 
 function update(delta) {
-    is7.canvas.update(delta);
+	is7.canvas.update(delta);
 }
 
 function draw(interpolationPercentage) {
-    is7.canvas.draw(interpolationPercentage);
+	is7.canvas.draw(interpolationPercentage);
 }
 
 MainLoop.setUpdate(update).setDraw(draw).setEnd(end).start(window.is7.canvas = new window.is7.Canvas());
